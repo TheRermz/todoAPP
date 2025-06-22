@@ -1,0 +1,124 @@
+# =============================
+# 📁 .gitignore para:
+# - .NET Web API
+# - React Native
+# - React (Web)
+# =============================
+
+# ======================================
+# 🟦 .NET / ASP.NET Core Web API
+# ======================================
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code settings
+.vscode/
+
+# Logs
+*.log
+
+# ASP.NET Core secrets
+**/secrets.json
+
+# EF Core tools
+*.db
+
+# Publish folders
+publish/
+out/
+
+# ======================================
+# 🟩 React Native
+# ======================================
+# node
+node_modules/
+
+# metro bundler cache
+.expo/
+.expo-shared/
+.expo-dev-tools/
+.packager/
+.haul/
+
+# React Native build artifacts
+android/.gradle
+android/app/build
+ios/Pods
+ios/build
+ios/*.xcworkspace
+ios/Podfile.lock
+ios/*.xcodeproj
+*.xcuserstate
+*.xcuserdata
+*.xcodeproj/
+*.xcworkspace/
+
+# macOS / Xcode
+.DS_Store
+*.plist
+
+# Watchman
+.watchmanconfig
+
+# TypeScript
+*.tsbuildinfo
+
+# React Native logs
+*.log
+
+# Gradle
+.gradle/
+local.properties
+
+# CocoaPods
+Pods/
+
+# NPM / Yarn lockfiles
+package-lock.json
+yarn.lock
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+
+# Misc
+npm-debug.log
+*.keystore
+.env
+
+# ======================================
+# 🟨 React (Web)
+# ======================================
+node_modules/
+build/
+dist/
+.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+*.log
+
+# Mac
+.DS_Store
+
+# npm logs
+npm-debug.log*
+
+# test coverage
+coverage/
+
+# Editor folders
+.vscode/
+.idea/
+*.sw?
+
+
