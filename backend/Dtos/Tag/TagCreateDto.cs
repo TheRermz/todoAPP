@@ -11,5 +11,5 @@ public class TagCreateDto
     [StringLength(50, ErrorMessage = "O título deve ter entre 3 e 50 caracteres.", MinimumLength = 3)]
     [Display(Name = "Título")]
     [DataType(DataType.Text)]
-    public required string Title { get; set; }
+    public required string Name { get; set; }
 }

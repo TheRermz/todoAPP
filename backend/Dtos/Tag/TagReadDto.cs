@@ -11,5 +11,5 @@ public class TagReadDto
     /// <summary>
     /// Título da tag, obrigatório e deve ter entre 3 e 50 caracteres.
     /// </summary>
-    public required string Title { get; set; }
+    public required string Name { get; set; }
 }
