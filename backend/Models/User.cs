@@ -1,5 +1,3 @@
-
-
 namespace todoApp.Models
 {
     public class User
