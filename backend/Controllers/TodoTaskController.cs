@@ -38,4 +38,119 @@ public class TodoTaskController : ControllerBase
         var taskDto = _mapper.Map<TodoTaskReadDto>(task);
         return Ok(taskDto);
     }
+
+    [HttpPost]
+    public async Task<ActionResult<TodoTaskReadDto>> CreateTodoTask(TodoTaskCreateDto todoTaskCreateDto)
+    {
+        // Verifica se já existe uma tarefa com o mesmo título
+        var taskExists = await _context.TodoTasks.AnyAsync(t => t.Title == todoTaskCreateDto.Title);
+        if (taskExists)
+        {
+            return BadRequest("Tarefa com este título já existe.");
+        }
+
+        // Mapeia os dados recebidos para a entidade
+        var task = _mapper.Map<TodoTask>(todoTaskCreateDto);
+
+        // Valida e associa as tags, se fornecidas
+        if (todoTaskCreateDto.TagIds != null && todoTaskCreateDto.TagIds.Any())
+        {
+            var tags = await _context.Tags
+                .Where(tag => todoTaskCreateDto.TagIds.Contains(tag.Id))
+                .ToListAsync();
+
+            var notFoundIds = todoTaskCreateDto.TagIds.Except(tags.Select(t => t.Id)).ToList();
+            if (notFoundIds.Any())
+            {
+                return BadRequest($"As tags com os seguintes IDs não foram encontradas: {string.Join(", ", notFoundIds)}");
+            }
+
+            task.TaskTags = tags.Select(tag => new TaskTag { TagId = tag.Id, Tag = tag }).ToList();
+        }
+
+        // Tenta salvar no banco de dados
+        try
+        {
+            _context.TodoTasks.Add(task);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao criar a tarefa.");
+        }
+
+        // Retorna os dados da tarefa criada
+        var todoTaskDto = _mapper.Map<TodoTaskReadDto>(task);
+        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, todoTaskDto);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTodoTask(int id, TodoTaskUpdateDto dto)
+    {
+        var task = await _context.TodoTasks
+            .Include(t => t.TaskTags)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (task == null)
+        {
+            return NotFound("Tarefa não encontrada.");
+        }
+
+        // Atualiza os campos se vierem preenchidos
+        if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
+        if (!string.IsNullOrWhiteSpace(dto.Description)) task.Description = dto.Description;
+        if (dto.StartDate.HasValue) task.StartDate = dto.StartDate.Value;
+        if (dto.EndDate.HasValue) task.EndDate = dto.EndDate.Value;
+        if (dto.Status.HasValue) task.Status = dto.Status.Value;
+        if (dto.Priority.HasValue) task.Priority = dto.Priority.Value;
+
+        task.UpdatedAt = DateTime.UtcNow;
+
+        // Atualiza as tags se vierem novas
+        if (dto.TagIds != null)
+        {
+            task.TaskTags.Clear();
+            var tags = await _context.Tags.Where(t => dto.TagIds.Contains(t.Id)).ToListAsync();
+            task.TaskTags = tags.Select(tag => new TaskTag { TagId = tag.Id, Tag = tag }).ToList();
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return Ok("Tarefa atualizada com sucesso.");
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao atualizar a tarefa.");
+        }
+    }
+
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTodoTask(int id)
+    {
+        var task = await _context.TodoTasks
+    .Include(t => t.TaskTags)
+    .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (task == null)
+        {
+            return NotFound("Tarefa não encontrada.");
+        }
+
+        _context.TodoTasks.Remove(task);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return NoContent(); // status 204
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao excluir tarefa.");
+        }
+    }
+
+
+
 }
