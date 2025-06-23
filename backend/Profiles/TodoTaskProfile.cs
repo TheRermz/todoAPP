@@ -6,8 +6,8 @@ public class TodoTaskProfile : Profile
 {
     public TodoTaskProfile()
     {
-        CreateMap<TodoTask, TodoTaskCreateDto>();
+        CreateMap<TodoTaskCreateDto, TodoTask>();
         CreateMap<TodoTask, TodoTaskReadDto>();
-        CreateMap<TodoTask, TodoTaskUpdateDto>();
+        CreateMap<TodoTaskUpdateDto, TodoTask>();
     }
 }
