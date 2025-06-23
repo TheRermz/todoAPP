@@ -1,0 +1,108 @@
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using todoApp.Dtos.User;
+using todoApp.Models;
+namespace todoApp.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+
+public class UserController : ControllerBase
+{
+
+    private readonly AppDbContext _context;
+    private readonly IMapper _mapper;
+
+    public UserController(AppDbContext context, IMapper mapper)
+    {
+        _context = context;
+        _mapper = mapper;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<UserReadDto>>> GetAllUsers()
+    {
+        var users = await _context.Users.ToListAsync();
+        var usersDto = _mapper.Map<List<UserReadDto>>(users);
+        return Ok(usersDto);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserReadDto>> GetUserById(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        var userDto = _mapper.Map<UserReadDto>(user);
+        return Ok(userDto);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<UserReadDto>> CreateUser(UserCreateDto userCreateDto)
+    {
+        var user = _mapper.Map<User>(userCreateDto);
+        var userExists = await _context.Users.AnyAsync(u => u.Username == user.Username);
+        var emailExists = await _context.Users.AnyAsync(e => e.Email == user.Email);
+
+
+        if (userExists)
+        {
+            return BadRequest("Usuário já cadastrado.");
+        }
+        else if (emailExists)
+        {
+            return BadRequest("Email já cadastrado.");
+        }
+
+        var pwdPlain = userCreateDto.Password;
+        var pwdHash = BCrypt.Net.BCrypt.HashPassword(pwdPlain);
+        user.PasswordHash = pwdHash;
+
+        try
+        {
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao criar usuário.");
+        }
+
+        var userDto = _mapper.Map<UserReadDto>(user);
+        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userDto);
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userUpdateDto)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound("Usuário não encontrado.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(userUpdateDto.Password) &&
+            BCrypt.Net.BCrypt.Verify(userUpdateDto.Password, user.PasswordHash))
+        {
+            return BadRequest("A nova senha não pode ser igual à senha atual.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userUpdateDto.Password);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return Ok("Usuário atualizado com sucesso.");
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao atualizar usuário.");
+        }
+    }
+
+
+}

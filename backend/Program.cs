@@ -22,6 +22,8 @@ var conn = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(conn));
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
