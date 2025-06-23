@@ -104,5 +104,30 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+        {
+            return NotFound("Usuário não encontrado.");
+        }
+
+        if (await _context.TodoTask.AnyAsync(t => t.UserId == id))
+        {
+            return BadRequest("Usuário não pode ser excluído, pois possui tarefas associadas.");
+        }
+        try
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest("Erro ao excluir usuário.");
+        }
+    }
+
 
 }
