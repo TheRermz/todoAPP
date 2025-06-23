@@ -76,6 +76,9 @@ public class UserController : ControllerBase
     }
 
     [HttpPatch("{id}")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userUpdateDto)
     {
         var user = await _context.Users.FindAsync(id);
@@ -113,9 +116,9 @@ public class UserController : ControllerBase
             return NotFound("Usuário não encontrado.");
         }
 
-        if (await _context.TodoTask.AnyAsync(t => t.UserId == id))
+        if (await _context.TodoTasks.AnyAsync(u => u.UserId == id))
         {
-            return BadRequest("Usuário não pode ser excluído, pois possui tarefas associadas.");
+            return Conflict("Usuário possui tarefas. Remova ou transfira-as antes de excluir o usuário.");
         }
         try
         {
