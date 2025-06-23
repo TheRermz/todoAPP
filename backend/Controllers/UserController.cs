@@ -34,7 +34,7 @@ public class UserController : ControllerBase
         var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
-            return NotFound();
+            return NotFound("Usuário não encontrado");
         }
         var userDto = _mapper.Map<UserReadDto>(user);
         return Ok(userDto);
