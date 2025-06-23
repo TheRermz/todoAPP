@@ -64,4 +64,9 @@ public class TodoTaskCreateDto
     [Display(Name = "Criado em")]
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Associa a tarefa ao usuario
+    /// </summary>
+    public int UserId { get; set; }
 }

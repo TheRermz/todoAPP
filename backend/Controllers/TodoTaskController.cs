@@ -42,17 +42,27 @@ public class TodoTaskController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TodoTaskReadDto>> CreateTodoTask(TodoTaskCreateDto todoTaskCreateDto)
     {
-        // Verifica se já existe uma tarefa com o mesmo título
+
+        // Verificar se o usuário existe
+        var userExists = await _context.Users.AnyAsync(u => u.Id == todoTaskCreateDto.UserId);
+        if (!userExists)
+        {
+            return BadRequest("Usuário não encontrado para a tarefa.");
+        }
         var taskExists = await _context.TodoTasks.AnyAsync(t => t.Title == todoTaskCreateDto.Title);
         if (taskExists)
         {
             return BadRequest("Tarefa com este título já existe.");
         }
 
-        // Mapeia os dados recebidos para a entidade
         var task = _mapper.Map<TodoTask>(todoTaskCreateDto);
 
-        // Valida e associa as tags, se fornecidas
+        task.CreatedAt = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        if (task.EndDate.HasValue && task.EndDate.Value.Kind == DateTimeKind.Unspecified)
+            task.EndDate = DateTime.SpecifyKind(task.EndDate.Value, DateTimeKind.Utc);
+
         if (todoTaskCreateDto.TagIds != null && todoTaskCreateDto.TagIds.Any())
         {
             var tags = await _context.Tags
@@ -68,7 +78,6 @@ public class TodoTaskController : ControllerBase
             task.TaskTags = tags.Select(tag => new TaskTag { TagId = tag.Id, Tag = tag }).ToList();
         }
 
-        // Tenta salvar no banco de dados
         try
         {
             _context.TodoTasks.Add(task);
@@ -79,10 +88,10 @@ public class TodoTaskController : ControllerBase
             return BadRequest("Erro ao criar a tarefa.");
         }
 
-        // Retorna os dados da tarefa criada
         var todoTaskDto = _mapper.Map<TodoTaskReadDto>(task);
         return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, todoTaskDto);
     }
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTodoTask(int id, TodoTaskUpdateDto dto)
