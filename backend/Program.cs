@@ -2,6 +2,7 @@
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 using todoApp;
+using todoApp.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<JwtService>();
 
 var app = builder.Build();
 
