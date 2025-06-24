@@ -1,10 +1,12 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using todoApp.Dtos.TodoTask;
 using todoApp.Models;
 namespace todoApp.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 

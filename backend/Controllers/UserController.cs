@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using todoApp.Dtos.User;
@@ -19,7 +21,7 @@ public class UserController : ControllerBase
         _context = context;
         _mapper = mapper;
     }
-
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserReadDto>>> GetAllUsers()
     {
@@ -28,6 +30,7 @@ public class UserController : ControllerBase
         return Ok(usersDto);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<ActionResult<UserReadDto>> GetUserById(int id)
     {
@@ -35,6 +38,12 @@ public class UserController : ControllerBase
         if (user == null)
         {
             return NotFound("Usuário não encontrado");
+        }
+        // Apenas retorna o próprio usuário
+        var userIdFromToken = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        if (id != userIdFromToken)
+        {
+            return Forbid("Você não tem permissão para acessar este recurso.");
         }
         var userDto = _mapper.Map<UserReadDto>(user);
         return Ok(userDto);
@@ -74,7 +83,7 @@ public class UserController : ControllerBase
         var userDto = _mapper.Map<UserReadDto>(user);
         return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userDto);
     }
-
+    [Authorize]
     [HttpPatch("{id}")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -106,7 +115,7 @@ public class UserController : ControllerBase
             return BadRequest("Erro ao atualizar usuário.");
         }
     }
-
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {

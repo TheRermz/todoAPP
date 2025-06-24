@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using todoApp.Dtos.Tag;
 using todoApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace todoApp.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TagController : ControllerBase
