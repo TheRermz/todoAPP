@@ -22,9 +22,13 @@ public class TodoTaskController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<TodoTaskReadDto>> GetAllTasks()
+    public async Task<ActionResult<IEnumerable<TodoTaskReadDto>>> GetAllTasks()
     {
-        var tasks = await _context.TodoTasks.ToListAsync();
+        var tasks = await _context.TodoTasks
+            .Include(t => t.TaskTags)
+            .ThenInclude(tt => tt.Tag)
+            .ToListAsync();
+
         var tasksDto = _mapper.Map<List<TodoTaskReadDto>>(tasks);
         return Ok(tasksDto);
     }
@@ -32,11 +36,16 @@ public class TodoTaskController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoTaskReadDto>> GetTaskById(int id)
     {
-        var task = await _context.TodoTasks.FindAsync(id);
+        var task = await _context.TodoTasks
+            .Include(t => t.TaskTags)
+            .ThenInclude(tt => tt.Tag)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
         if (task == null)
         {
             return NotFound("Tarefa não encontrada");
         }
+
         var taskDto = _mapper.Map<TodoTaskReadDto>(task);
         return Ok(taskDto);
     }
@@ -90,7 +99,13 @@ public class TodoTaskController : ControllerBase
             return BadRequest("Erro ao criar a tarefa.");
         }
 
-        var todoTaskDto = _mapper.Map<TodoTaskReadDto>(task);
+        var taskWithTags = await _context.TodoTasks
+            .Include(t => t.TaskTags)
+            .ThenInclude(tt => tt.Tag)
+            .FirstOrDefaultAsync(t => t.Id == task.Id);
+
+        var todoTaskDto = _mapper.Map<TodoTaskReadDto>(taskWithTags);
+
         return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, todoTaskDto);
     }
 
