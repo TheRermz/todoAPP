@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace todoApp.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 
-public class TodoTaskController : ControllerBase
+public class TodoTaskController : BaseController
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
@@ -24,9 +25,13 @@ public class TodoTaskController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TodoTaskReadDto>>> GetAllTasks()
     {
+        var userId = GetUserIdFromClaims();
+        if (userId == null) return Unauthorized();
+
         var tasks = await _context.TodoTasks
             .Include(t => t.TaskTags)
             .ThenInclude(tt => tt.Tag)
+            .Where(t => t.UserId == userId)
             .ToListAsync();
 
         var tasksDto = _mapper.Map<List<TodoTaskReadDto>>(tasks);
@@ -36,9 +41,14 @@ public class TodoTaskController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TodoTaskReadDto>> GetTaskById(int id)
     {
+
+        var userId = GetUserIdFromClaims();
+        if (userId == null) return Unauthorized();
+
         var task = await _context.TodoTasks
             .Include(t => t.TaskTags)
             .ThenInclude(tt => tt.Tag)
+            .Where(t => t.Id == id && t.UserId == userId)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null)
@@ -54,13 +64,10 @@ public class TodoTaskController : ControllerBase
     public async Task<ActionResult<TodoTaskReadDto>> CreateTodoTask(TodoTaskCreateDto todoTaskCreateDto)
     {
 
-        // Verificar se o usuário existe
-        var userExists = await _context.Users.AnyAsync(u => u.Id == todoTaskCreateDto.UserId);
-        if (!userExists)
-        {
-            return BadRequest("Usuário não encontrado para a tarefa.");
-        }
-        var taskExists = await _context.TodoTasks.AnyAsync(t => t.Title == todoTaskCreateDto.Title);
+        var userId = GetUserIdFromClaims();
+        if (userId == null) return Unauthorized();
+
+        var taskExists = await _context.TodoTasks.AnyAsync(t => t.Title == todoTaskCreateDto.Title && t.UserId == userId);
         if (taskExists)
         {
             return BadRequest("Tarefa com este título já existe.");
@@ -68,6 +75,7 @@ public class TodoTaskController : ControllerBase
 
         var task = _mapper.Map<TodoTask>(todoTaskCreateDto);
 
+        task.UserId = userId.Value;
         task.CreatedAt = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
 
