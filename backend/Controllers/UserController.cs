@@ -141,5 +141,21 @@ public class UserController : ControllerBase
         }
     }
 
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserReadDto>> GetCurrentUser()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        if (!int.TryParse(userIdClaim.Value, out var userId)) return Unauthorized(); // é uma forma segura de garantir que você tenha um ID de usuário numérico válido antes de continuar. Se não for válido, a requisição é negada.
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound("Usuário não encontrado");
+
+        var userDto = _mapper.Map<UserReadDto>(user);
+        return Ok(userDto);
+    }
+
 
 }
