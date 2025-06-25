@@ -58,15 +58,4 @@ public class TodoTaskCreateDto
     [DataType(DataType.Text)]
     public List<int>? TagIds { get; set; } = new();
 
-    /// <summary>
-    /// Data de criação da tarefa, preenchida automaticamente.
-    /// </summary>
-    [Display(Name = "Criado em")]
-    [DataType(DataType.DateTime)]
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Associa a tarefa ao usuario
-    /// </summary>
-    public int UserId { get; set; }
 }

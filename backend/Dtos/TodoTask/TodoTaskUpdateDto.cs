@@ -1,6 +1,7 @@
 namespace todoApp.Dtos.TodoTask;
 
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using todoApp.Models;
 
 public class TodoTaskUpdateDto
@@ -20,6 +21,7 @@ public class TodoTaskUpdateDto
     /// <summary>
     /// Data de início da tarefa, obrigatória.
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateTime? StartDate { get; set; }
 
     /// <summary>

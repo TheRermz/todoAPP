@@ -14,7 +14,6 @@ public class TodoTaskReadDto
     /// <summary>
     /// Título da tarefa, obrigatório e deve ter entre 3 e 100 caracteres.
     /// </summary>
-    [Required(ErrorMessage = "Título é obrigatório.")]
     public required string Title { get; set; }
     /// <summary>
     /// Descrição da tarefa, opcional e deve ter no máximo 500 caracteres.
