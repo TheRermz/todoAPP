@@ -121,17 +121,24 @@ public class TodoTaskController : BaseController
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTodoTask(int id, TodoTaskUpdateDto dto)
     {
+        var userId = GetUserIdFromClaims();
+        if (userId == null) return Unauthorized();
+
         var task = await _context.TodoTasks
             .Include(t => t.TaskTags)
-            .FirstOrDefaultAsync(t => t.Id == id);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
-        if (task == null)
-        {
-            return NotFound("Tarefa não encontrada.");
-        }
+        if (task == null) return NotFound("Tarefa não encontrada ou acesso negado.");
 
         // Atualiza os campos se vierem preenchidos
-        if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+        {
+            var titleExists = await _context.TodoTasks
+                .AnyAsync(t => t.Title == dto.Title && t.UserId == userId && t.Id != id);
+
+            if (titleExists)
+                return BadRequest("Outra tarefa com este título já existe.");
+        }
         if (!string.IsNullOrWhiteSpace(dto.Description)) task.Description = dto.Description;
         if (dto.StartDate.HasValue) task.StartDate = dto.StartDate.Value;
         if (dto.EndDate.HasValue) task.EndDate = dto.EndDate.Value;
@@ -151,7 +158,7 @@ public class TodoTaskController : BaseController
         try
         {
             await _context.SaveChangesAsync();
-            return Ok("Tarefa atualizada com sucesso.");
+            return Ok(dto);
         }
         catch (DbUpdateException)
         {
@@ -163,14 +170,14 @@ public class TodoTaskController : BaseController
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTodoTask(int id)
     {
-        var task = await _context.TodoTasks
-    .Include(t => t.TaskTags)
-    .FirstOrDefaultAsync(t => t.Id == id);
+        var userId = GetUserIdFromClaims();
+        if (userId == null) return Unauthorized();
 
-        if (task == null)
-        {
-            return NotFound("Tarefa não encontrada.");
-        }
+        var task = await _context.TodoTasks
+            .Include(t => t.TaskTags)
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+
+        if (task == null) return NotFound("Tarefa não encontrada ou acesso negado.");
 
         _context.TodoTasks.Remove(task);
 
