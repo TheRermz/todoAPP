@@ -87,6 +87,19 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:8081", "http://192.168.15.5:8081") // Ajuste conforme o Expo indicar no terminal
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
+
 
 
 var app = builder.Build();
@@ -101,6 +114,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
