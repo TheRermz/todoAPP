@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const data: AuthData = {
     token: raw.jwtToken, // <- renomeando corretamente
     username: raw.username,
+    email: raw.email
     // adicione email ou userId aqui se necessário
   };
 

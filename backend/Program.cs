@@ -93,7 +93,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:8081", "http://192.168.15.5:8081") // Ajuste conforme o Expo indicar no terminal
+                .WithOrigins() // Ajuste conforme o Expo indicar no terminal
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });

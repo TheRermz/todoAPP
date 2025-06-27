@@ -46,7 +46,8 @@ public class AuthController : ControllerBase
         var res = new LoginResponseDto
         {
             JwtToken = token,
-            Username = user.Username
+            Username = user.Username,
+            Email = user.Email
         };
 
         return Ok(res);

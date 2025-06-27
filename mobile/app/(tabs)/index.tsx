@@ -11,7 +11,7 @@ export default function Home() {
       </Text>
       {auth ? (
         <Text style={{ color: "#aaa" }}>
-          Logado como: {auth.username} ({auth.email})
+          Logado como: {auth.username} - ({auth.email})
         </Text>
       ) : (
         <Text style={{ color: "#aaa" }}>Usuário não autenticado</Text>
