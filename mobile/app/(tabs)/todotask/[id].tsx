@@ -1,9 +1,8 @@
-// app/(tabs)/todotask/[id].tsx
-
-import { useLocalSearchParams } from "expo-router";
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
 import { useEffect, useState } from "react";
 import { fetchTaskById } from "@/services/taskService";
+import { TaskStatus, TaskPriority } from "@/types/tasks";
 
 interface Task {
   id: number;
@@ -18,8 +17,22 @@ interface Task {
   tagList?: { id: number; name: string }[];
 }
 
+const statusLabels: Record<TaskStatus, string> = {
+  [TaskStatus.Pending]: "Pendente",
+  [TaskStatus.InProgress]: "Em andamento",
+  [TaskStatus.Completed]: "Concluída",
+  [TaskStatus.Late]: "Atrasada",
+};
+
+const priorityLabels: Record<TaskPriority, string> = {
+  [TaskPriority.Low]: "Baixa",
+  [TaskPriority.Medium]: "Média",
+  [TaskPriority.High]: "Alta",
+};
+
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +44,7 @@ export default function TaskDetailScreen() {
         const data = await fetchTaskById(Number(id));
         setTask(data);
       } catch (error) {
-        console.error("Erro ao carregar tarefa:", error);
+        console.error(`Erro ao carregar tarefa:`, error);
       } finally {
         setLoading(false);
       }
@@ -57,46 +70,68 @@ export default function TaskDetailScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: "#121212" }} contentContainerStyle={{ padding: 16 }}>
       <Text style={{ fontSize: 24, fontWeight: "bold", color: "#fff" }}>{task.title}</Text>
-      {task.description ? (
+
+      {task.description && (
         <Text style={{ fontSize: 16, color: "#ccc", marginTop: 8 }}>{task.description}</Text>
-      ) : null}
+      )}
 
       <Text style={{ color: "#aaa", marginTop: 12 }}>
-        Início: {new Date(task.startDate).toLocaleString()}
+        {`Início: ${new Date(task.startDate).toLocaleString()}`}
       </Text>
+
       {task.endDate && (
-        <Text style={{ color: "#aaa" }}>
-          Prazo: {new Date(task.endDate).toLocaleString()}
-        </Text>
+        <Text style={{ color: "#aaa" }}>{`Prazo: ${new Date(task.endDate).toLocaleString()}`}</Text>
       )}
+
       <Text style={{ color: "#aaa" }}>
-        Criado em: {new Date(task.createdAt).toLocaleString()}
+        {`Criado em: ${new Date(task.createdAt).toLocaleString()}`}
       </Text>
+
       {task.updatedAt && (
         <Text style={{ color: "#aaa" }}>
-          Atualizado em: {new Date(task.updatedAt).toLocaleString()}
+          {`Atualizado em: ${new Date(task.updatedAt).toLocaleString()}`}
         </Text>
       )}
 
       <Text style={{ color: "#aaa", marginTop: 8 }}>
-        Status: {["Pendente", "Em Andamento", "Concluída", "Cancelada"][task.status]}
-      </Text>
-      <Text style={{ color: "#aaa" }}>
-        Prioridade: {["Baixa", "Média", "Alta"][task.priority]}
+        {`Status: ${statusLabels[task.status as TaskStatus] ?? "Desconhecido"}`}
       </Text>
 
-      {task.tagList?.length ? (
-        <View style={{ marginTop: 12 }}>
-          <Text style={{ fontWeight: "bold", color: "#fff" }}>Tags:</Text>
-          {task.tagList.map((tag) => (
-            <Text key={tag.id} style={{ color: "#ccc" }}>
-              - {tag.name}
-            </Text>
-          ))}
-        </View>
-      ) : null}
+      <Text style={{ color: "#aaa" }}>
+        {`Prioridade: ${priorityLabels[task.priority as TaskPriority] ?? "Desconhecida"}`}
+      </Text>
+
+      {Array.isArray(task.tagList) && task.tagList.length > 0 && (
+  <View style={{ marginTop: 12 }}>
+    <Text style={{ fontWeight: "bold", color: "#fff" }}>Tags:</Text>
+    {task.tagList.map((tag) => (
+      <Text key={tag.id} style={{ color: "#ccc" }}>{`- ${tag.name}`}</Text>
+    ))}
+  </View>
+)}
+
+
+
+      <TouchableOpacity
+        style={{
+          marginTop: 24,
+          backgroundColor: "#3b82f6",
+          paddingVertical: 12,
+          borderRadius: 8,
+        }}
+        onPress={() =>
+          router.push({
+            pathname: "/edit-task/[id]",
+            params: { id: String(task.id) },
+          })
+        }
+      >
+        <Text style={{ color: "#fff", textAlign: "center", fontWeight: "bold" }}>
+          Editar Tarefa
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }

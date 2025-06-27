@@ -28,7 +28,16 @@ export async function fetchTasks() {
 }
 
 export async function fetchTaskById(id: number) {
-  const response = await api.get(`/todotask/${id}`);
+  const json = await SecureStore.getItemAsync("auth");
+  if (!json) throw new Error("Usuário não autenticado");
+
+  const auth = JSON.parse(json);
+  const token = auth?.token;
+  const response = await api.get(`/todotask/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 }
 
