@@ -21,7 +21,7 @@ export default function EditTaskScreen() {
     title: "",
     description: "",
     status: TaskStatus.Pending,
-    priority: TaskPriority.Medium,
+    priority: TaskPriority.Low,
   });
 
   const [loading, setLoading] = useState(true);
